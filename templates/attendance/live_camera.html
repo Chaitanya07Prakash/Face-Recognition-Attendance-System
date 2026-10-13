@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Live Attendance Camera — Attendance System{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">
+                Live Attendance Camera
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Real-time employee facial recognition, shift validation, and automated check-in/out logging.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="camera-status-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span id="camera-indicator-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span id="camera-status-text">Camera Idle</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Live Video Stream Panel -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="premium-card rounded-2xl shadow-sm p-6 space-y-5">
+                <div class="rounded-xl overflow-hidden bg-slate-900 aspect-video relative border border-slate-800 shadow-inner flex items-center justify-center">
+                    <img id="live-stream-img" alt="Live Camera Feed" class="w-full h-full object-contain hidden">
+                    <div id="stream-placeholder" class="text-center p-8 text-slate-400">
+                        <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-slate-800/80 flex items-center justify-center text-teal-400">
+                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                            </svg>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-200">Camera is ready</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Click "Start Camera" to start live facial recognition against registered employee vectors.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="button" id="start-btn" onclick="startCamera()"
+                            class="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl py-3 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+                        Start Camera
+                    </button>
+                    <button type="button" id="stop-btn" onclick="stopCamera()" style="display:none;"
+                            class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl py-3 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" /></svg>
+                        Stop Camera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal Recognition Mode -->
+            <div class="premium-card rounded-2xl p-6 shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Desktop OpenCV Window (Report Page 24)
+                </h3>
+                <p class="text-xs text-slate-500 mb-3">
+                    Prefer running the dedicated high-performance desktop window? Stop the web camera above, then run:
+                </p>
+                <div class="bg-slate-900 rounded-xl p-3 text-teal-400 font-mono text-xs select-all border border-slate-800">
+                    python manage.py run_recognition --camera-index 0 --display
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Attendance Feed -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="premium-card rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 class="text-md font-bold text-slate-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Today's Attendance
+                    </h2>
+                    <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                        {{ today|date:"M j, Y" }}
+                    </span>
+                </div>
+
+                <div id="attendance-feed" class="flow-root max-h-[460px] overflow-y-auto pr-1">
+                    <ul class="-my-3 divide-y divide-slate-100" id="events-list">
+                        {% for record in today_attendances %}
+                        <li class="py-3 flex items-center justify-between text-sm">
+                            <div>
+                                <p class="font-semibold text-slate-800">{{ record.employee.full_name }}</p>
+                                <p class="text-xs text-slate-400">
+                                    {{ record.employee.employee_code }} • Check-in: {{ record.check_in_time|date:"H:i:s"|default:"—" }}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold
+                                    {% if record.status == 'PRESENT' %} bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% elif record.status == 'LATE' %} bg-amber-50 text-amber-700 border border-amber-100
+                                    {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                                    {{ record.get_status_display }}
+                                </span>
+                                {% if record.check_out_time %}
+                                <p class="text-[10px] text-slate-400 mt-0.5">Out: {{ record.check_out_time|date:"H:i:s" }}</p>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="py-8 text-center text-xs text-slate-400 font-medium">
+                            No attendance records marked yet today. Start the camera to begin marking.
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const streamImg = document.getElementById('live-stream-img');
+    const placeholder = document.getElementById('stream-placeholder');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const statusPill = document.getElementById('camera-status-pill');
+    const dot = document.getElementById('camera-indicator-dot');
+    const statusText = document.getElementById('camera-status-text');
+    const feedUrl = "{% url 'attendance:video_feed' %}";
+    let pollInterval = null;
+
+    function startCamera() {
+        streamImg.src = feedUrl + "?t=" + new Date().getTime();
+        streamImg.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'flex';
+
+        statusPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+        statusText.innerText = "Camera Active";
+
+        // Poll attendance events every 3 seconds
+        pollAttendance();
+        pollInterval = setInterval(pollAttendance, 3000);
+    }
+
+    function stopCamera() {
+        streamImg.src = "";
+        streamImg.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        startBtn.style.display = 'flex';
+        stopBtn.style.display = 'none';
+
+        statusPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200";
+        dot.className = "w-2 h-2 rounded-full bg-slate-400";
+        statusText.innerText = "Camera Idle";
+
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    async function pollAttendance() {
+        try {
+            const resp = await fetch("{% url 'attendance:events_api' %}");
+            const data = await resp.json();
+            if (data.events && data.events.length > 0) {
+                const list = document.getElementById('events-list');
+                list.innerHTML = data.events.map(e => `
+                    <li class="py-3 flex items-center justify-between text-sm animate-fade-in">
+                        <div>
+                            <p class="font-semibold text-slate-800">${e.employee_name}</p>
+                            <p class="text-xs text-slate-400">${e.employee_code} • Check-in: ${e.check_in}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
+                                e.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                            }">
+                                ${e.status}
+                            </span>
+                            ${e.check_out !== '—' ? `<p class="text-[10px] text-slate-400 mt-0.5">Out: ${e.check_out}</p>` : ''}
+                        </div>
+                    </li>
+                `).join('');
+            }
+        } catch (err) {
+            console.error("Attendance polling error:", err);
+        }
+    }
+</script>
+{% endblock %}

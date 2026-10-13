@@ -1,0 +1,4 @@
+<option value="">Select...</option>
+{% for obj in objects %}
+<option value="{{ obj.pk }}">{{ obj.name }}</option>
+{% endfor %}

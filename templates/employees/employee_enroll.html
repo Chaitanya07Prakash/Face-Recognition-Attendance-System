@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Enroll face — {{ employee.full_name }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">Enroll Face Samples</h1>
+        <p class="text-sm text-slate-500 mt-1">Registering biometric descriptors for <span class="font-semibold text-slate-700">{{ employee.full_name }} ({{ employee.employee_code }})</span>.</p>
+    </div>
+
+    <div class="premium-card rounded-2xl shadow-sm p-8 space-y-6">
+        <div class="rounded-xl overflow-hidden bg-slate-900 aspect-video relative border border-slate-800 shadow-inner">
+            <video id="webcam-video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <p id="webcam-status" class="absolute inset-0 flex items-center justify-center text-slate-300 text-sm font-medium">
+                Click "Start Camera" below
+            </p>
+        </div>
+        <canvas id="capture-canvas" class="hidden"></canvas>
+
+        <div class="flex gap-4">
+            <button type="button" id="start-camera-btn"
+                    class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl py-3 text-sm font-semibold border border-slate-200/80 shadow-sm transition-all duration-200 transform active:scale-[0.98]">
+                Start Camera
+            </button>
+            <button type="button" id="capture-btn" disabled
+                    class="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl py-3 text-sm font-semibold shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 transform active:scale-[0.98]">
+                Capture Photo
+            </button>
+        </div>
+
+        <div>
+            <p class="text-xs font-semibold text-slate-500 mb-2">
+                Captured samples (need at least 3 — vary angle/expression slightly between shots):
+            </p>
+            <div id="thumbnails" class="flex flex-wrap gap-2.5 min-h-[4rem]"></div>
+        </div>
+
+        <div class="border-t border-slate-200/60 pt-6">
+            <p class="text-xs font-semibold text-slate-500 mb-2.5">
+                No webcam, or prefer to upload existing photos instead? Select files here:
+            </p>
+            <input type="file" id="file-fallback-input" accept="image/*" multiple
+                   class="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border file:border-slate-200 file:bg-slate-50 file:text-sm file:font-semibold hover:file:bg-slate-100 transition-all duration-200 cursor-pointer">
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="enroll-form">
+            {% csrf_token %}
+            <input type="file" name="photos" id="photos-input" multiple class="hidden">
+            <button type="submit" id="submit-btn" disabled
+                    class="w-full mt-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl py-3.5 text-sm font-bold shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-teal-600 disabled:hover:to-emerald-600 transition-all duration-300 transform active:scale-[0.98]">
+                Submit Samples for Enrollment
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    const video = document.getElementById('webcam-video');
+    const status = document.getElementById('webcam-status');
+    const canvas = document.getElementById('capture-canvas');
+    const startBtn = document.getElementById('start-camera-btn');
+    const captureBtn = document.getElementById('capture-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const thumbnails = document.getElementById('thumbnails');
+    const photosInput = document.getElementById('photos-input');
+    const fileFallbackInput = document.getElementById('file-fallback-input');
+
+    // Accumulated File objects, from either webcam captures or the manual
+    // file picker fallback — both funnel into this one array, which we
+    // sync into the real <input type="file"> before submit via DataTransfer
+    // (the only way to programmatically set a file input's value).
+    let capturedFiles = [];
+    let stream = null;
+
+    function syncFileInput() {
+        const dataTransfer = new DataTransfer();
+        capturedFiles.forEach(file => dataTransfer.items.add(file));
+        photosInput.files = dataTransfer.files;
+        submitBtn.disabled = capturedFiles.length < 3;
+    }
+
+    function addThumbnail(file) {
+        const url = URL.createObjectURL(file);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative';
+        wrapper.innerHTML = `
+            <img src="${url}" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
+            <button type="button" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full w-5 h-5 text-xs leading-5">×</button>
+        `;
+        wrapper.querySelector('button').addEventListener('click', () => {
+            capturedFiles = capturedFiles.filter(f => f !== file);
+            wrapper.remove();
+            syncFileInput();
+        });
+        thumbnails.appendChild(wrapper);
+    }
+
+    startBtn.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            video.srcObject = stream;
+            status.classList.add('hidden');
+            captureBtn.disabled = false;
+            startBtn.textContent = 'Camera running';
+            startBtn.disabled = true;
+        } catch (err) {
+            status.textContent = 'Camera access denied or unavailable — use the file upload option below instead.';
+        }
+    });
+
+    captureBtn.addEventListener('click', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob((blob) => {
+            const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            capturedFiles.push(file);
+            addThumbnail(file);
+            syncFileInput();
+        }, 'image/jpeg', 0.92);
+    });
+
+    fileFallbackInput.addEventListener('change', () => {
+        Array.from(fileFallbackInput.files).forEach(file => {
+            capturedFiles.push(file);
+            addThumbnail(file);
+        });
+        syncFileInput();
+        fileFallbackInput.value = '';
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+    });
+})();
+</script>
+{% endblock %}

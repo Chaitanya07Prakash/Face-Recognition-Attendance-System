@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Attendance System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+        }
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.92);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .premium-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.06);
+            border-color: rgba(203, 213, 225, 0.9);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Premium Form Styles */
+        input[type="text"], input[type="password"], input[type="email"], input[type="date"], select {
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1.5px solid #e2e8f0; /* slate-200 */
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem; /* text-sm */
+            background-color: rgba(255, 255, 255, 0.75);
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="date"]:focus, select:focus {
+            border-color: #0d9488; /* teal-600 */
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15); /* focus:ring-teal-500/15 */
+        }
+    </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col">
+    {% if user.is_authenticated %}
+    <nav class="glass-nav text-white sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{% url 'employees:list' %}" class="font-bold tracking-tight text-lg bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent hover:brightness-110 transition-all duration-300">
+                Attendance System
+            </a>
+            <div class="flex items-center gap-5 text-sm">
+                <a href="{% url 'employees:list' %}" class="hover:text-teal-400 transition-colors duration-200 font-medium">Employees</a>
+                <a href="{% url 'attendance:live_camera' %}" class="flex items-center gap-1.5 text-teal-300 hover:text-teal-200 transition-colors duration-200 font-semibold bg-teal-950/60 px-3 py-1 rounded-lg border border-teal-500/30">
+                    <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                    Live Camera
+                </a>
+                <a href="/admin/" class="hover:text-teal-400 transition-colors duration-200 font-medium">Admin</a>
+                <span class="text-slate-400 select-none">|</span>
+                <span class="text-slate-300 font-medium bg-slate-800/80 px-2.5 py-1 rounded-md text-xs border border-slate-700/50">
+                    {{ user.username }} · {{ user.get_role_display }}
+                </span>
+                <form method="post" action="{% url 'logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-slate-300 hover:text-rose-400 transition-colors duration-200 font-medium">Log out</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8 animate-fade-in">
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="rounded-xl px-4 py-3 text-sm border shadow-sm flex items-center gap-2 transition-all duration-300
+                {% if message.tags == 'success' %} bg-emerald-50/90 text-emerald-800 border-emerald-200/80
+                {% elif message.tags == 'error' %} bg-rose-50/90 text-rose-800 border-rose-200/80
+                {% elif message.tags == 'warning' %} bg-amber-50/90 text-amber-800 border-amber-200/80
+                {% else %} bg-slate-50/90 text-slate-700 border-slate-200/80 {% endif %}">
+                <span class="w-1.5 h-1.5 rounded-full 
+                    {% if message.tags == 'success' %} bg-emerald-500
+                    {% elif message.tags == 'error' %} bg-rose-500
+                    {% elif message.tags == 'warning' %} bg-amber-500
+                    {% else %} bg-slate-500 {% endif %}"></span>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+ 
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
