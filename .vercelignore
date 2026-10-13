@@ -1,0 +1,17 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.env
+.idea/
+.vscode/
+data/
+media/
+*.sqlite3
+staticfiles/
+node_modules/
+.pytest_cache/
+scratch/

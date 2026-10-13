@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.class
@@ -8,6 +8,7 @@ env/
 
 # Environment secrets
 .env
+keys.txt
 
 # Django database & media
 *.sqlite3
@@ -17,3 +18,4 @@ staticfiles/
 # Face recognition data
 trained_faces.pkl
 data/admins.json
+.vercel
