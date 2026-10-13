@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Log in — Attendance System{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-16 premium-card rounded-2xl shadow-sm p-8 space-y-6">
+    <div class="text-center">
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">Attendance System</h1>
+        <p class="text-sm text-slate-500 mt-2">Sign in to manage employees and view records</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="rounded-xl bg-rose-50 text-rose-800 border border-rose-200/80 px-4 py-3 text-sm flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Incorrect username or password.
+    </div>
+    {% endif %}
+
+    <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-700" for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" autofocus required>
+        </div>
+        <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-700" for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" required>
+        </div>
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl py-3 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-[0.98]">
+            Sign In
+        </button>
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+</div>
+{% endblock %}

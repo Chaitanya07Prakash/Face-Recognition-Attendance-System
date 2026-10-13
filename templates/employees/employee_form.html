@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Register employee — Attendance System{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">Register Employee</h1>
+        <p class="text-sm text-slate-500 mt-1">Create a new employee profile. The location hierarchy filters dynamically.</p>
+    </div>
+
+    <form method="post" class="premium-card rounded-2xl shadow-sm p-8 space-y-6">
+        {% csrf_token %}
+
+        {% for field in form %}
+            {% if field.name != 'department' %}
+            <div class="space-y-1.5">
+                <label class="block text-sm font-semibold text-slate-700" for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %} <span class="text-rose-500">*</span>{% endif %}
+                </label>
+
+                {% if field.name == 'area' %}
+                <select name="area" id="{{ field.id_for_label }}"
+                        onchange="htmx.ajax('GET', '/employees/options/projects/' + this.value + '/', {target: '#id_project', swap: 'innerHTML'})">
+                    <option value="">Select area...</option>
+                    {% for choice in field.field.queryset %}
+                    <option value="{{ choice.pk }}" {% if field.value|stringformat:"s" == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice.name }}</option>
+                    {% endfor %}
+                </select>
+                {% elif field.name == 'project' %}
+                <select name="project" id="id_project"
+                        onchange="htmx.ajax('GET', '/employees/options/mines/' + this.value + '/', {target: '#id_mine', swap: 'innerHTML'})">
+                    <option value="">Select project...</option>
+                    {% for choice in field.field.queryset %}
+                    <option value="{{ choice.pk }}" {% if field.value|stringformat:"s" == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice.name }}</option>
+                    {% endfor %}
+                </select>
+                {% elif field.name == 'mine' %}
+                <select name="mine" id="id_mine"
+                        onchange="htmx.ajax('GET', '/employees/options/departments/' + this.value + '/', {target: '#id_department', swap: 'innerHTML'})">
+                    <option value="">Select mine...</option>
+                    {% for choice in field.field.queryset %}
+                    <option value="{{ choice.pk }}" {% if field.value|stringformat:"s" == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice.name }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                {{ field }}
+                {% endif %}
+
+                {% if field.errors %}
+                <p class="text-xs font-medium text-rose-600 mt-1">{{ field.errors|join:", " }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-700" for="id_department">
+                Department <span class="text-rose-500">*</span>
+            </label>
+            <select name="department" id="id_department">
+                <option value="">Select mine first...</option>
+                {% for choice in form.department.field.queryset %}
+                <option value="{{ choice.pk }}" {% if form.department.value|stringformat:"s" == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice.name }}</option>
+                {% endfor %}
+            </select>
+            {% if form.department.errors %}
+            <p class="text-xs font-medium text-rose-600 mt-1">{{ form.department.errors|join:", " }}</p>
+            {% endif %}
+        </div>
+
+        <button type="submit"
+                class="w-full mt-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl py-3 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-[0.98]">
+            Register Employee
+        </button>
+    </form>
+</div>
+{% endblock %}

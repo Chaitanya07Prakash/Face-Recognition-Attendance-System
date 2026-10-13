@@ -1,0 +1,19 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+venv/
+.venv/
+env/
+
+# Environment secrets
+.env
+
+# Django database & media
+*.sqlite3
+db.sqlite3
+staticfiles/
+
+# Face recognition data
+trained_faces.pkl
+data/admins.json
